@@ -34,11 +34,11 @@ def addCommand():
     hotkeys.append(StringVar())
     hotkeyentries.append(Entry(root, textvariable=hotkeys[-1]))
     for entry in stringentries:
-        entry.pack()
+        entry.grid(row=stringentries.index(entry) + 3,column=0)
         if stringvars[stringentries.index(entry)].get() == "":
             stringvars[stringentries.index(entry)].set("default")
     for entry in hotkeyentries:
-        entry.pack()
+        entry.grid(row=hotkeyentries.index(entry) + 3,column=1)
         if hotkeys[hotkeyentries.index(entry)].get() == "":
             hotkeys[hotkeyentries.index(entry)].set("add a hotkey")
     # texts.append()
@@ -46,16 +46,22 @@ def addCommand():
 listeners = []
 
 toggle_btn = tk.Button(text="Toggle", width=12, relief="raised", command=toggle)
-toggle_btn.pack(pady=5)
+toggle_btn.grid(row=0,column=0)
 add_btn = tk.Button(text="Add a command", width=12, relief="raised", command=addCommand)
-add_btn.pack(pady=5)
+add_btn.grid(row=0,column=1)
+tk.Label(text="Chat Button =>").grid(row=1,column=0)
+chatbutton = StringVar()
+chatButtonEntry = Entry(root, textvariable=chatbutton)
+chatButtonEntry.grid(row=1,column=1)
+tk.Label(text="Text").grid(row=2,column=0)
+tk.Label(text="Hotkey").grid(row=2,column=1)
 
 
 def on_press(key):
     for phrase in stringvars:   
         if key == keyboard.KeyCode.from_char(hotkeys[stringvars.index(phrase)].get()):
-            Controller().press('t')
-            Controller().release('t')
+            Controller().press(chatbutton.get())
+            Controller().release(chatbutton.get())
             time.sleep(.1)
             Controller().type(phrase.get())
             time.sleep(.1)
@@ -74,5 +80,5 @@ def on_press(key):
 #         return False
 
 # Collect events until released
-
+addCommand()
 root.mainloop()
