@@ -45,7 +45,7 @@ def addCommand():
     for entry in hotkeyentries:
         entry.grid(row=hotkeyentries.index(entry) + 3,column=3,sticky=W+E)
         if hotkeys[hotkeyentries.index(entry)].get() == "":
-            hotkeys[hotkeyentries.index(entry)].set("add a hotkey")
+            hotkeys[hotkeyentries.index(entry)].set("")
 
 listeners = []
 
@@ -62,21 +62,30 @@ tk.Label(text="Hotkey").grid(row=2,column=3)
 
 
 def on_press(key):
-    for phrase in stringvars:   
-        if key == keyboard.KeyCode.from_char(hotkeys[stringvars.index(phrase)].get()):
+    for phrase in stringvars:
+        if key == keyboard.KeyCode.from_char(hotkeys[stringvars.index(phrase)].get()) or key == getattr(Key, hotkeys[stringvars.index(phrase)].get(), None):
             try:
                 Controller().press(chatbutton.get())
             except ValueError:
-                Controller().press(getattr(Key, chatbutton.get()))
+                try:
+                    Controller().press(getattr(Key, chatbutton.get()))
+                except AttributeError:
+                    None
             try:
-                Controller().press(getattr(Key, chatbutton.get()))
+                Controller().release(chatbutton.get())
             except ValueError:
-                print(chatbutton.get())
+                try:
+                    Controller().release(getattr(Key, chatbutton.get()))
+                except AttributeError:
+                    None
             time.sleep(.1)
             Controller().type(phrase.get())
             time.sleep(.1)
             Controller().press(Key.enter)
             Controller().release(Key.enter)
+            listeners[-1].stop()
+            listeners.append(keyboard.Listener(on_press=on_press))
+            listeners[-1].start()
 
 addCommand()
 root.mainloop()
