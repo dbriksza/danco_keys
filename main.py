@@ -4,6 +4,21 @@ import time
 from tkinter import *
 import tkinter as tk
 
+from typing import Optional
+from ctypes import wintypes, windll, create_unicode_buffer
+
+def getForegroundWindowTitle() -> Optional[str]:
+    hWnd = windll.user32.GetForegroundWindow()
+    length = windll.user32.GetWindowTextLengthW(hWnd)
+    buf = create_unicode_buffer(length + 1)
+    windll.user32.GetWindowTextW(hWnd, buf, length + 1)
+
+    # 1-liner alternative: return buf.value if buf.value else None
+    if buf.value:
+        return buf.value
+    else:
+        return None
+
 root = tk.Tk()
 root.title("Dan's Spam Manager")
 
@@ -63,29 +78,30 @@ tk.Label(text="Hotkey").grid(row=2,column=3)
 
 def on_press(key):
     for phrase in stringvars:
-        if key == keyboard.KeyCode.from_char(hotkeys[stringvars.index(phrase)].get()) or key == getattr(Key, hotkeys[stringvars.index(phrase)].get(), None):
-            try:
-                Controller().press(chatbutton.get())
-            except ValueError:
+        if getForegroundWindowTitle() != "Dan's Spam Manager":
+            if key == keyboard.KeyCode.from_char(hotkeys[stringvars.index(phrase)].get()) or key == getattr(Key, hotkeys[stringvars.index(phrase)].get(), None):
                 try:
-                    Controller().press(getattr(Key, chatbutton.get()))
-                except AttributeError:
-                    None
-            try:
-                Controller().release(chatbutton.get())
-            except ValueError:
+                    Controller().press(chatbutton.get())
+                except ValueError:
+                    try:
+                        Controller().press(getattr(Key, chatbutton.get()))
+                    except AttributeError:
+                        None
                 try:
-                    Controller().release(getattr(Key, chatbutton.get()))
-                except AttributeError:
-                    None
-            time.sleep(.1)
-            Controller().type(phrase.get())
-            time.sleep(.1)
-            Controller().press(Key.enter)
-            Controller().release(Key.enter)
-            listeners[-1].stop()
-            listeners.append(keyboard.Listener(on_press=on_press))
-            listeners[-1].start()
+                    Controller().release(chatbutton.get())
+                except ValueError:
+                    try:
+                        Controller().release(getattr(Key, chatbutton.get()))
+                    except AttributeError:
+                        None
+                time.sleep(.1)
+                Controller().type(phrase.get())
+                time.sleep(.1)
+                Controller().press(Key.enter)
+                Controller().release(Key.enter)
+                listeners[-1].stop()
+                listeners.append(keyboard.Listener(on_press=on_press))
+                listeners[-1].start()
 
 addCommand()
 root.mainloop()
